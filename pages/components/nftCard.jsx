@@ -1,4 +1,12 @@
+import React, { Component } from "react";
+import { useState } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCoffee } from "@fortawesome/free-solid-svg-icons";
+import { faCopy } from "@fortawesome/free-solid-svg-icons";
+import { faGithub } from "@fortawesome/free-brands-svg-icons";
+
 export const NFTCard = ({ nft }) => {
+  const [copySuccess, setCopySuccess] = useState("");
   return (
     <div className="w-1/4 flex flex-col ">
       <div className="rounded-md">
@@ -13,12 +21,27 @@ export const NFTCard = ({ nft }) => {
           <p className="text-gray-600">
             {nft.id.tokenId.substr(nft.id.tokenId.length - 4)}
           </p>
-          <p className="text-gray-600">{`${nft.contract.address.substr(
-            0,
-            4
-          )}...${nft.contract.address.substr(
-            nft.contract.address.length - 4
-          )}`}</p>
+          <p className="text-gray-600">
+            {`${nft.contract.address.substr(
+              0,
+              4
+            )}...${nft.contract.address.substr(
+              nft.contract.address.length - 4
+            )}`}
+            <button
+              className="px-15 py-2 mt-3 rounded-sm w-1/5"
+              onClick={async () => {
+                await navigator.clipboard.writeText(nft.contract.address);
+                setCopySuccess("Copied!");
+                setTimeout(() => {
+                  setCopySuccess("");
+                }, 5000);
+              }}
+            >
+              <FontAwesomeIcon icon={faCopy} />
+            </button>
+            {copySuccess}
+          </p>
         </div>
 
         <div className="flex-grow mt-2">
