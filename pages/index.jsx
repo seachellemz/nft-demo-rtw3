@@ -19,41 +19,68 @@ const Home = () => {
   const [currentPage, setCurrentPage] = useState(0);
 
   const [pageKey, setPageKey] = useState([]);
+  const [myMap, setMyMap] = useState(new Map());
+  const updateMap = (k, v) => {
+    setMyMap(new Map(myMap.set(k, v)));
+  };
   const [fetchForCollection, setFetchForCollection] = useState(false);
+
   const pageSize = 25;
+  var previousPageKey = "";
+  var activeCurrentPage = 1;
 
   console.log("GETTING CONFIG");
-  //console.log(serverRuntimeConfig.mySecret); // Will only be available on the server side
-  //console.log(publicRuntimeConfig.staticFolder); // Will be available on both server and client
   const api_key = publicRuntimeConfig.API_KEY;
-  //console.log(api_key);
   console.log("RETRIEVED CONFIG");
-  console.log("CurrentPage:  ", currentPage);
 
-  const fetchNFTs = async () => {
+  const fetchNFTs = async (inPageKey) => {
     // Get all NFT's and filter by collection
     let nfts;
     console.log("Fetching nfts");
 
     const baseURL = `https://eth-mainnet.alchemyapi.io/v2/${api_key}/getNFTs/`;
+    var activePageKey;
+    var activeCurrentPage = 0;
+
     if (!collection.length) {
       // No collection
       var requestOptions = {
         method: "GET",
       };
       var fetchURL = `${baseURL}?owner=${wallet}&pageSize=${pageSize}`;
+      console.log("fetchNFTs PAGEKEY:  ", pageKey);
 
-      if (!pageKey.length) {
+      if (pageKey === undefined) {
+        //|| !pageKey.length) {
+        // if (!pageKey.length) {
         console.log("fetchNFTs - Getting NFT's without a page key");
         fetchURL = `${baseURL}?owner=${wallet}&pageSize=${pageSize}`;
-        //setCurrentPage(currentPage + 1);
+        setCurrentPage(currentPage);
         console.log("fetchNFTs - currentPageCount:  ", currentPage);
         console.log("fetchNFTs - fetchURL:  ", fetchURL);
       } else {
-        console.log("fetchNFTs - Getting NFT's using pageKey:  ", pageKey);
-        fetchURL = `${baseURL}?owner=${wallet}&pageSize=${pageSize}&pageKey=${pageKey}`;
-        setCurrentPage(currentPage + 1);
-        console.log("fetchNFTs - fetchURL:  ", fetchURL);
+        if (currentPage == 1 || !previousPageKey.length) {
+          activePageKey = pageKey;
+          activeCurrentPage = currentPage + 1;
+        } else {
+          console.log("fetchNFTs - Getting NFT's using previous page key");
+          console.log("fetchNFTs - previousPageKey", previousPageKey);
+          activePageKey = previousPageKey;
+          previousPageKey = "";
+          activeCurrentPage = currentPage - 1;
+        }
+        console.log("fetchNFTs - Getting NFT's. currentPage:    ", currentPage);
+        console.log(
+          "fetchNFTs - Getting NFT's using activePageKey:  ",
+          activePageKey
+        );
+        console.log(
+          "fetchNFTs - Getting NFT's using activeCurrentPage:  ",
+          activeCurrentPage
+        );
+        fetchURL = `${baseURL}?owner=${wallet}&pageSize=${pageSize}&pageKey=${activePageKey}`;
+        setCurrentPage(activeCurrentPage);
+        //console.log("fetchNFTs - fetchURL:  ", fetchURL);
       }
 
       //const fetchURL = `${baseURL}?owner=${wallet}&pageSize=${pageSize}`;
@@ -62,6 +89,7 @@ const Home = () => {
         pageSize: 25,
       });
       nfts = await fetch(fetchURL, requestOptions).then((data) => data.json());
+      // console.log("fetchNFTs - retrieved pagekey:  ", nfts.pageKey);
     } else {
       // filter by collection
       console.log("fetchNFTs - fetching nfts for collection owned by address");
@@ -70,7 +98,7 @@ const Home = () => {
       console.log("fetchNFTs - done fetching for collection owned by address");
     }
     if (nfts) {
-      console.log("fetchNFTs - NFTs:  ", nfts);
+      //console.log("fetchNFTs - NFTs:  ", nfts);
       console.log("fetchNFTs - TotalCount: ", nfts.totalCount);
       var totalCount = nfts.totalCount;
       var tempPageCount = Math.ceil(totalCount / pageSize);
@@ -79,8 +107,13 @@ const Home = () => {
       //lastPage = pageCount;
       //console.log("fetchNFTs - lastPage:  ", lastPage);
 
-      setCurrentPage(currentPage + 1);
+      //setCurrentPage(activeCurrentPage + 1);
       setPageKey(nfts.pageKey);
+      console.log("fetchNFTs - retrieved pagekey:  ", nfts.pageKey);
+      console.log("fetchNFTs - activeCurrentPage:  ", activeCurrentPage);
+      console.log("fetchNFTs - currentPage:  ", currentPage);
+      //updateMap(activeCurrentPage, nfts.pageKey);
+      updateMap(activeCurrentPage, activePageKey);
       setHasMorePages(true);
 
       setNFTs(nfts.ownedNfts);
@@ -115,6 +148,7 @@ const Home = () => {
 
   const inputComponents = getInputComponents();
   const paginationComponents = getPaginationComponents();
+  //const paginationComponents = [];
   const nftCards = getNftCardComponents();
 
   return (
@@ -126,6 +160,7 @@ const Home = () => {
   );
 
   function getInputComponents() {
+    //const getInputComponents = async () => {
     return (
       <div className="flex flex-col w-full justify-center items-center gap-y-2">
         <input
@@ -175,10 +210,22 @@ const Home = () => {
   }
 
   function getPaginationComponents() {
-    console.log("getPaginationComponents - pageCount:  ", pageCount);
+    //const getPaginationComponents = async () => {
+    console.log("getPaginationComponents ENTRY - pageCount:  ", pageCount);
     if (pageCount > 0) {
+      console.log("getPaginationComponents - currentPage:  ", currentPage);
       if (currentPage < pageCount) {
-        setHasMorePages(false);
+        if (!hasMorePages) {
+          console.log("getPaginationComponents - !hasMorePages");
+          setHasMorePages(true);
+        }
+        console.log(
+          "getPaginationComponents - hasMorePages value:  ",
+          hasMorePages
+        );
+        console.log("getPaginationComponents - page Keys:  ", myMap.keys());
+        //console.log("getPaginationComponents - page values:  ", myMap.values());
+        console.log("getPaginationComponents - EXIT");
         return (
           <div className="flex flex-wrap gap-y-12 mt-4 w-5/6 gap-x-2 justify-center">
             <label className="text-gray-600">
@@ -186,11 +233,54 @@ const Home = () => {
             </label>
 
             <button
-              className="disabled:gb-slate-500 text-white bg-blue-400 px-4 py-2 mt-3 rounded-sm w-1/5"
-              disabled={hasMorePages ? true : false}
+              className="disabled:bg-slate-500 text-white bg-blue-400 px-4 py-2 mt-3 rounded-sm w-1/5"
+              disabled={currentPage == 1 ? true : false}
               onClick={() => {
                 console.log(
-                  "getPaginationComponents - onClick:  ",
+                  "getPaginationComponents - onClick (previous):  ",
+                  currentPage
+                );
+                if (pageCount > currentPage) {
+                  var newCurrentPage = 1;
+                  if (currentPage == 2) {
+                    console.log(
+                      "getPaginationComponents - GOING BACK TO PAGE 1"
+                    );
+                    newPageKey = undefined;
+                  } else {
+                    var newPageKey = myMap.get(currentPage - 1);
+                  }
+                  newCurrentPage = currentPage - 1;
+
+                  console.log(
+                    "getPaginationComponents - previous Pagekey to retrieve:  ",
+                    newPageKey
+                  );
+                  console.log(
+                    "getPaginationComponents - previous page number to retrieve:  ",
+                    newCurrentPage
+                  );
+                  //setPageKey(newPageKey);
+                  //setCurrentPage(newCurrentPage);
+                  activeCurrentPage = newCurrentPage;
+
+                  previousPageKey = newPageKey;
+                  fetchNFTs();
+                }
+              }}
+            >
+              Previous Page
+            </button>
+            <button
+              className="disabled:bg-slate-500 text-white bg-blue-400 px-4 py-2 mt-3 rounded-sm w-1/5"
+              disabled={hasMorePages ? false : true}
+              onClick={() => {
+                console.log(
+                  "getPaginationComponents - onClick (next):  ",
+                  currentPage
+                );
+                console.log(
+                  "getPaginationComponents - onClick currentPage:  ",
                   currentPage
                 );
                 if (pageCount > currentPage) {
@@ -206,8 +296,16 @@ const Home = () => {
         console.log("PageCount:  ", pageCount);
         console.log("currentPage:  ", currentPage);
         setPageKey([]);
-        setHasMorePages(false);
-        return <div> You have viewed all of the NFT's</div>;
+        setPageCount(0);
+        setCurrentPage(1);
+        //setPageKey([]);
+        //setHasMorePages(false);
+        return (
+          <div className="bold text-blue text-4xl">
+            {" "}
+            You have viewed all of the NFT's
+          </div>
+        );
       }
     } else {
       console.log("getPaginationComponents - currentPage >= pageCount");
@@ -216,6 +314,7 @@ const Home = () => {
   }
 
   function getNftCardComponents() {
+    //const getNftCardComponents = async () => {
     if (NFTs.length > 0) {
       return (
         <div className="flex flex-wrap gap-y-12 mt-4 w-5/6 gap-x-2 justify-center">
@@ -232,72 +331,6 @@ const Home = () => {
         </div>
       );
     }
-  }
-
-  function render() {
-    return (
-      <div className="flex flex-col items-center justify-center py-8 gap-y-3">
-        <div className="flex flex-col w-full justify-center items-center gap-y-2">
-          <input
-            disabled={fetchForCollection}
-            className="w-2/5 bg-slate-100 py-2 px-2 rounded-lg text-gray-800 focus:outline-blue-300 disabled:bg-slate-50 disabled:text-gray-50"
-            onChange={(e) => {
-              setWalletAddress(e.target.value);
-            }}
-            value={wallet}
-            type={"text"}
-            placeholder="Add your wallet address"
-          ></input>
-          <input
-            className="w-2/5 bg-slate-100 py-2 px-2 rounded-lg text-gray-800 focus:outline-blue-300 disabled:bg-slate-200 disabled:text-gray-50"
-            onChange={(e) => {
-              setCollectionAddress(e.target.value);
-            }}
-            value={collection}
-            type={"text"}
-            placeholder="Add the collection address"
-          ></input>
-          <label className="text-gray-600">
-            <input
-              onChange={(e) => {
-                setFetchForCollection(e.target.checked);
-              }}
-              type={"checkbox"}
-              className="mr-2"
-            ></input>
-            Fetch for collection
-          </label>
-          <button
-            className="disabled:bg-slate-500 text-white bg-blue-400 px-4 py-2 mt-3 rounded-sm w-1/5"
-            onClick={() => {
-              if (fetchForCollection) {
-                fetchNFTsForCollection();
-              } else fetchNFTs();
-            }}
-          >
-            Let's go!
-          </button>
-        </div>
-        <div className="flex flex-wrap gap-y-12 mt-4 w-5/6 gap-x-2 justify-center">
-          <label className="text-gray-600">Current Page: {currentPage} </label>
-
-          <button
-            className="disabled:gb-slate-500 text-white bg-blue-400 px-4 py-2 mt-3 rounded-sm w-1/5"
-            onClick={() => {
-              fetchNFTs();
-            }}
-          >
-            NextPage
-          </button>
-        </div>
-        <div className="flex flex-wrap gap-y-12 mt-4 w-5/6 gap-x-2 justify-center">
-          {NFTs.length &&
-            NFTs.map((nft) => {
-              return <NFTCard nft={nft}></NFTCard>;
-            })}
-        </div>
-      </div>
-    );
   }
 };
 
