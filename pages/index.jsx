@@ -50,12 +50,13 @@ const Home = () => {
       var fetchURL = `${baseURL}?owner=${wallet}&pageSize=${pageSize}`;
       console.log("fetchNFTs PAGEKEY:  ", pageKey);
 
-      if (pageKey === undefined) {
+      //if (pageKey === undefined) {
+      if (currentPage == 0) {
         //|| !pageKey.length) {
         // if (!pageKey.length) {
         console.log("fetchNFTs - Getting NFT's without a page key");
         fetchURL = `${baseURL}?owner=${wallet}&pageSize=${pageSize}`;
-        setCurrentPage(currentPage);
+        setCurrentPage(currentPage + 1);
         console.log("fetchNFTs - currentPageCount:  ", currentPage);
         console.log("fetchNFTs - fetchURL:  ", fetchURL);
       } else {
@@ -249,7 +250,8 @@ const Home = () => {
                   "getPaginationComponents - onClick (previous):  ",
                   currentPage
                 );
-                if (pageCount == currentPage) {
+                var newPageKey = undefined;
+                if (pageCount >= currentPage) {
                   var newCurrentPage = 1;
                   setCurrentPage(currentPage - 1);
                   if (currentPage == 2) {
@@ -258,7 +260,7 @@ const Home = () => {
                     );
                     newPageKey = undefined;
                   } else {
-                    var newPageKey = myMap.get(currentPage - 1);
+                    newPageKey = myMap.get(currentPage - 1);
                   }
                   newCurrentPage = currentPage - 1;
 
