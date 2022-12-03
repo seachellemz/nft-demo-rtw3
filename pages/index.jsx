@@ -59,15 +59,20 @@ const Home = () => {
         console.log("fetchNFTs - currentPageCount:  ", currentPage);
         console.log("fetchNFTs - fetchURL:  ", fetchURL);
       } else {
-        if (currentPage == 1 || !previousPageKey.length) {
-          activePageKey = pageKey;
-          activeCurrentPage = currentPage + 1;
-        } else {
-          console.log("fetchNFTs - Getting NFT's using previous page key");
-          console.log("fetchNFTs - previousPageKey", previousPageKey);
-          activePageKey = previousPageKey;
+        if (previousPageKey === undefined) {
           previousPageKey = "";
-          activeCurrentPage = currentPage - 1;
+          activeCurrentPage = 1;
+        } else {
+          if (currentPage == 1 || !previousPageKey.length) {
+            activePageKey = pageKey;
+            activeCurrentPage = currentPage + 1;
+          } else {
+            console.log("fetchNFTs - Getting NFT's using previous page key");
+            console.log("fetchNFTs - previousPageKey", previousPageKey);
+            activePageKey = previousPageKey;
+            previousPageKey = "";
+            activeCurrentPage = currentPage - 1;
+          }
         }
         console.log("fetchNFTs - Getting NFT's. currentPage:    ", currentPage);
         console.log(
@@ -114,7 +119,11 @@ const Home = () => {
       console.log("fetchNFTs - currentPage:  ", currentPage);
       //updateMap(activeCurrentPage, nfts.pageKey);
       updateMap(activeCurrentPage, activePageKey);
-      setHasMorePages(true);
+      if (currentPage + 1 >= pageCount) {
+        setHasMorePages(false);
+      } else {
+        setHasMorePages(true);
+      }
 
       setNFTs(nfts.ownedNfts);
     } else {
@@ -214,8 +223,8 @@ const Home = () => {
     console.log("getPaginationComponents ENTRY - pageCount:  ", pageCount);
     if (pageCount > 0) {
       console.log("getPaginationComponents - currentPage:  ", currentPage);
-      if (currentPage < pageCount) {
-        if (!hasMorePages) {
+      if (currentPage <= pageCount) {
+        if (!hasMorePages && currentPage < pageCount) {
           console.log("getPaginationComponents - !hasMorePages");
           setHasMorePages(true);
         }
@@ -240,8 +249,9 @@ const Home = () => {
                   "getPaginationComponents - onClick (previous):  ",
                   currentPage
                 );
-                if (pageCount > currentPage) {
+                if (pageCount == currentPage) {
                   var newCurrentPage = 1;
+                  setCurrentPage(currentPage - 1);
                   if (currentPage == 2) {
                     console.log(
                       "getPaginationComponents - GOING BACK TO PAGE 1"
@@ -283,6 +293,10 @@ const Home = () => {
                   "getPaginationComponents - onClick currentPage:  ",
                   currentPage
                 );
+                console.log(
+                  "getPaginationComponents - onClick pageCount:  ",
+                  pageCount
+                );
                 if (pageCount > currentPage) {
                   fetchNFTs();
                 }
@@ -299,7 +313,7 @@ const Home = () => {
         setPageCount(0);
         setCurrentPage(1);
         //setPageKey([]);
-        //setHasMorePages(false);
+        setHasMorePages(false);
         return (
           <div className="bold text-blue text-4xl">
             {" "}
