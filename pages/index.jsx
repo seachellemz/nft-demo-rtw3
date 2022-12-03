@@ -104,21 +104,9 @@ const Home = () => {
       console.log("fetchNFTs - done fetching for collection owned by address");
     }
     if (nfts) {
-      //console.log("fetchNFTs - NFTs:  ", nfts);
-      console.log("fetchNFTs - TotalCount: ", nfts.totalCount);
       var totalCount = nfts.totalCount;
-      var tempPageCount = Math.ceil(totalCount / pageSize);
-      console.log("fetchNFTs - tempPageCount:  ", tempPageCount);
       setPageCount(Math.ceil(totalCount / pageSize));
-      //lastPage = pageCount;
-      //console.log("fetchNFTs - lastPage:  ", lastPage);
-
-      //setCurrentPage(activeCurrentPage + 1);
       setPageKey(nfts.pageKey);
-      console.log("fetchNFTs - retrieved pagekey:  ", nfts.pageKey);
-      console.log("fetchNFTs - activeCurrentPage:  ", activeCurrentPage);
-      console.log("fetchNFTs - currentPage:  ", currentPage);
-      //updateMap(activeCurrentPage, nfts.pageKey);
       updateMap(activeCurrentPage, activePageKey);
       if (currentPage + 1 >= pageCount) {
         setHasMorePages(false);
@@ -158,7 +146,6 @@ const Home = () => {
 
   const inputComponents = getInputComponents();
   const paginationComponents = getPaginationComponents();
-  //const paginationComponents = [];
   const nftCards = getNftCardComponents();
 
   return (
@@ -170,7 +157,6 @@ const Home = () => {
   );
 
   function getInputComponents() {
-    //const getInputComponents = async () => {
     return (
       <div className="flex flex-col w-full justify-center items-center gap-y-2">
         <input
@@ -220,7 +206,6 @@ const Home = () => {
   }
 
   function getPaginationComponents() {
-    //const getPaginationComponents = async () => {
     console.log("getPaginationComponents ENTRY - pageCount:  ", pageCount);
     if (pageCount > 0) {
       console.log("getPaginationComponents - currentPage:  ", currentPage);
@@ -233,88 +218,78 @@ const Home = () => {
           "getPaginationComponents - hasMorePages value:  ",
           hasMorePages
         );
-        console.log("getPaginationComponents - page Keys:  ", myMap.keys());
-        //console.log("getPaginationComponents - page values:  ", myMap.values());
-        console.log("getPaginationComponents - EXIT");
+
         return (
-          <div className="flex flex-wrap gap-y-12 mt-4 w-5/6 gap-x-2 justify-center">
-            <label className="text-gray-600">
-              Current Page: {currentPage}{" "}
-            </label>
+          <div
+            div
+            className="flex flex-wrap gap-y-12 mt-4 w-5/6 gap-x-2 justify-center"
+          >
+            <div className="flex flex-wrap gap-y-12 mt-4 w-5/6 gap-x-2 justify-center">
+              <button
+                className="disabled:bg-slate-500 text-white bg-blue-400 px-3 py-2 mt-3 rounded-md w-1/5"
+                disabled={currentPage == 1 ? true : false}
+                onClick={() => {
+                  console.log(
+                    "getPaginationComponents - onClick (previous):  ",
+                    currentPage
+                  );
+                  var newPageKey = undefined;
+                  if (pageCount >= currentPage) {
+                    var newCurrentPage = 1;
+                    setCurrentPage(currentPage - 1);
+                    if (currentPage == 2) {
+                      console.log(
+                        "getPaginationComponents - GOING BACK TO PAGE 1"
+                      );
+                      newPageKey = undefined;
+                    } else {
+                      newPageKey = myMap.get(currentPage - 1);
+                    }
+                    newCurrentPage = currentPage - 1;
 
-            <button
-              className="disabled:bg-slate-500 text-white bg-blue-400 px-4 py-2 mt-3 rounded-sm w-1/5"
-              disabled={currentPage == 1 ? true : false}
-              onClick={() => {
-                console.log(
-                  "getPaginationComponents - onClick (previous):  ",
-                  currentPage
-                );
-                var newPageKey = undefined;
-                if (pageCount >= currentPage) {
-                  var newCurrentPage = 1;
-                  setCurrentPage(currentPage - 1);
-                  if (currentPage == 2) {
                     console.log(
-                      "getPaginationComponents - GOING BACK TO PAGE 1"
+                      "getPaginationComponents - previous Pagekey to retrieve:  ",
+                      newPageKey
                     );
-                    newPageKey = undefined;
-                  } else {
-                    newPageKey = myMap.get(currentPage - 1);
+                    console.log(
+                      "getPaginationComponents - previous page number to retrieve:  ",
+                      newCurrentPage
+                    );
+                    //setPageKey(newPageKey);
+                    //setCurrentPage(newCurrentPage);
+                    activeCurrentPage = newCurrentPage;
+
+                    previousPageKey = newPageKey;
+                    fetchNFTs();
                   }
-                  newCurrentPage = currentPage - 1;
-
-                  console.log(
-                    "getPaginationComponents - previous Pagekey to retrieve:  ",
-                    newPageKey
-                  );
-                  console.log(
-                    "getPaginationComponents - previous page number to retrieve:  ",
-                    newCurrentPage
-                  );
-                  //setPageKey(newPageKey);
-                  //setCurrentPage(newCurrentPage);
-                  activeCurrentPage = newCurrentPage;
-
-                  previousPageKey = newPageKey;
-                  fetchNFTs();
-                }
-              }}
-            >
-              Previous Page
-            </button>
-            <button
-              className="disabled:bg-slate-500 text-white bg-blue-400 px-4 py-2 mt-3 rounded-sm w-1/5"
-              disabled={hasMorePages ? false : true}
-              onClick={() => {
-                console.log(
-                  "getPaginationComponents - onClick (next):  ",
-                  currentPage
-                );
-                console.log(
-                  "getPaginationComponents - onClick currentPage:  ",
-                  currentPage
-                );
-                console.log(
-                  "getPaginationComponents - onClick pageCount:  ",
-                  pageCount
-                );
-                if (pageCount > currentPage) {
-                  fetchNFTs();
-                }
-              }}
-            >
-              NextPage
-            </button>
+                }}
+              >
+                Previous Page
+              </button>
+              <button
+                className="disabled:bg-slate-500 text-white bg-blue-400 px-3 py-2 mt-3 rounded-lg w-1/5"
+                disabled={hasMorePages ? false : true}
+                onClick={() => {
+                  if (pageCount > currentPage) {
+                    fetchNFTs();
+                  }
+                }}
+              >
+                NextPage
+              </button>
+            </div>
+            <div className="flex flex-wrap pt-0 w-5/6 py-0 justify-center">
+              <label className="text-gray-600 pt-0">
+                Current Page: {currentPage}{" "}
+              </label>
+            </div>
           </div>
         );
       } else {
-        console.log("PageCount:  ", pageCount);
-        console.log("currentPage:  ", currentPage);
         setPageKey([]);
         setPageCount(0);
         setCurrentPage(1);
-        //setPageKey([]);
+
         setHasMorePages(false);
         return (
           <div className="bold text-blue text-4xl">
@@ -330,7 +305,6 @@ const Home = () => {
   }
 
   function getNftCardComponents() {
-    //const getNftCardComponents = async () => {
     if (NFTs.length > 0) {
       return (
         <div className="flex flex-wrap gap-y-12 mt-4 w-5/6 gap-x-2 justify-center">
